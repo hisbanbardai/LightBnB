@@ -12,19 +12,18 @@ const config = {
 
 const pool = new Pool(config);
 
-/// Users
-
 /**
  * Get a single user from the database given their email.
  * @param {String} email The email of the user.
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithEmail = function (email) {
+  const queryParams = [email];
+  let queryString = `SELECT * FROM users WHERE email = $1`;
+
   return pool
-    .query(`select * from users where email = $1`, [email])
-    .then((result) => {
-      return result.rows.length ? result.rows[0] : null;
-    })
+    .query(queryString, queryParams)
+    .then((result) => (result.rows.length ? result.rows[0] : null))
     .catch((err) => {
       return {
         error: err,
@@ -39,11 +38,12 @@ const getUserWithEmail = function (email) {
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function (id) {
+  const queryParams = [id];
+  let queryString = `SELECT * FROM users WHERE id = $1`;
+
   return pool
-    .query(`select * from users where id = $1`, [id])
-    .then((result) => {
-      return result.rows.length ? result.rows[0] : null;
-    })
+    .query(queryString, queryParams)
+    .then((result) => (result.rows.length ? result.rows[0] : null))
     .catch((err) => {
       return {
         error: err,
@@ -58,16 +58,12 @@ const getUserWithId = function (id) {
  * @return {Promise<{}>} A promise to the user.
  */
 const addUser = function (user) {
-  const values = [user.name, user.email, user.password];
-  console.log(values);
+  let queryString = `insert into users (name, email, password) values ($1, $2, $3) returning *;`;
+  const queryParams = [user.name, user.email, user.password];
+
   return pool
-    .query(
-      `insert into users (name, email, password) values ($1, $2, $3) returning *;`,
-      values
-    )
-    .then((result) => {
-      return result;
-    })
+    .query(queryString, queryParams)
+    .then((result) => result)
     .catch((err) => {
       return {
         error: err,
@@ -84,28 +80,19 @@ const addUser = function (user) {
  * @return {Promise<[{}]>} A promise to the reservations.
  */
 const getAllReservations = function (guest_id, limit = 10) {
+  let queryString = `SELECT properties.* 
+  FROM reservations
+  JOIN properties ON properties.id = reservations.property_id
+  JOIN property_reviews ON properties.id = property_reviews.property_id
+  WHERE reservations.guest_id = $1
+  GROUP BY properties.id, reservations.id
+  ORDER BY start_date
+  LIMIT $2;`;
+
+  const queryParams = [guest_id, limit];
   return pool
-    .query(
-      `select
-  properties.*
-from
-  reservations
-  join properties on properties.id = reservations.property_id
-  join property_reviews on properties.id = property_reviews.property_id
-where
-  reservations.guest_id = $1
-group by
-  properties.id, reservations.id
-order by
-  start_date
-limit
-  $2;`,
-      [guest_id, limit]
-    )
-    .then((result) => {
-      console.log(result.rows);
-      return result.rows;
-    })
+    .query(queryString, queryParams)
+    .then((result) => result.rows)
     .catch((err) => {
       return {
         error: err,
@@ -125,7 +112,6 @@ limit
 
 const getAllProperties = function (options, limit = 10) {
   const queryParams = [];
-
   let queryString = `
   SELECT properties.*, avg(property_reviews.rating) as average_rating
   FROM properties
@@ -179,9 +165,6 @@ const getAllProperties = function (options, limit = 10) {
     LIMIT $${queryParams.length};
     `;
   }
-
-  //To check if the query is right
-  console.log(queryString, queryParams);
 
   return pool
     .query(queryString, queryParams)
