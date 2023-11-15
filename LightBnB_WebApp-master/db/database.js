@@ -36,14 +36,14 @@ const getUserWithEmail = function (email) {
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function (id) {
-  // return pool
-  //   .query(`select * from users where id = $1`, [id])
-  //   .then((result) => {
-  //     return result.rows.length ? result.rows[0] : null;
-  //   })
-  //   .catch((err) => {
-  //     return err;
-  //   });
+  return pool
+    .query(`select * from users where id = $1`, [id])
+    .then((result) => {
+      return result.rows.length ? result.rows[0] : null;
+    })
+    .catch((err) => {
+      return err;
+    });
 };
 
 /**
