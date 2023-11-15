@@ -1,7 +1,6 @@
 const properties = require("./json/properties.json");
 const users = require("./json/users.json");
-const { Pool } = require('pg');
-
+const { Pool } = require("pg");
 
 //Database connection setup
 const config = {
@@ -21,7 +20,8 @@ const pool = new Pool(config);
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithEmail = function (email) {
-  return pool.query(`select * from users where email = $1`, [email])
+  return pool
+    .query(`select * from users where email = $1`, [email])
     .then((result) => {
       return result.rows.length ? result.rows[0] : null;
     })
@@ -52,10 +52,19 @@ const getUserWithId = function (id) {
  * @return {Promise<{}>} A promise to the user.
  */
 const addUser = function (user) {
-  const userId = Object.keys(users).length + 1;
-  user.id = userId;
-  users[userId] = user;
-  return Promise.resolve(user);
+  const values = [user.name, user.email, user.password];
+  console.log(values);
+  return pool
+    .query(
+      `insert into users (name, email, password) values ($1, $2, $3) returning *;`,
+      values
+    )
+    .then((result) => {
+      return result;
+    })
+    .catch((err) => {
+      return err;
+    });
 };
 
 /// Reservations
@@ -77,7 +86,7 @@ const getAllReservations = function (guest_id, limit = 10) {
  * @param {*} limit The number of results to return.
  * @return {Promise<[{}]>}  A promise to the properties.
  */
-const getAllProperties = function(options, limit = 10) {
+const getAllProperties = function (options, limit = 10) {
   return pool
     .query(`select * from properties limit $1`, [limit])
     .then((result) => {
