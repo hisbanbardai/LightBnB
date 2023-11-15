@@ -26,7 +26,10 @@ const getUserWithEmail = function (email) {
       return result.rows.length ? result.rows[0] : null;
     })
     .catch((err) => {
-      return err;
+      return {
+        error: err,
+        message: "An error occurred while fetching the user with email.",
+      };
     });
 };
 
@@ -42,7 +45,10 @@ const getUserWithId = function (id) {
       return result.rows.length ? result.rows[0] : null;
     })
     .catch((err) => {
-      return err;
+      return {
+        error: err,
+        message: "An error occurred while fetching the user with id.",
+      };
     });
 };
 
@@ -63,7 +69,10 @@ const addUser = function (user) {
       return result;
     })
     .catch((err) => {
-      return err;
+      return {
+        error: err,
+        message: "An error occurred while adding the user.",
+      };
     });
 };
 
